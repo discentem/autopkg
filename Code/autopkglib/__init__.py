@@ -14,21 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Core/shared autopkglib functions"""
-import glob
-import imp
-import os
-import plistlib
-import pprint
-import subprocess
-import sys
-import traceback
-from distutils.version import LooseVersion
-from typing import IO, Dict, Optional
-
-import pkg_resources
-import yaml
-
 from .common import (
     RE_KEYREF,
     FileOrPath,
@@ -38,6 +23,25 @@ from .common import (
     is_windows,
     log_err,
 )
+
+"""Core/shared autopkglib functions"""
+import glob
+import imp
+import os
+import plistlib
+import pprint
+import subprocess
+import sys
+import traceback
+import re
+from copy import deepcopy
+from distutils.version import LooseVersion
+from typing import IO, Dict, Optional
+
+import pkg_resources
+import yaml
+import appdirs
+
 from .prefs import Preferences
 
 try:
