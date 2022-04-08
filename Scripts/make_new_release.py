@@ -19,6 +19,7 @@
 import json
 import optparse
 import os
+import pathlib
 import plistlib
 import re
 import ssl
@@ -179,6 +180,7 @@ def main():
     if opts.autopkg_branch:
         git_cmd.extend(["--branch", opts.autopkg_branch])
     git_cmd.extend([f"https://github.com/{publish_user}/{publish_repo}", autopkg_root])
+    print((" ").join(git_cmd))
     # clone Git master
     print("** Clone git master")
     subprocess.check_call(git_cmd)
@@ -259,7 +261,7 @@ def main():
     # running using the system AutoPkg directory so that we ensure we're at the
     # minimum required version to run the AutoPkg recipe
     report_plist_path = tempfile.mkstemp()[1]
-    parent_path = os.path.join(os.path.abspath(os.path.dirname(__file__)))
+    parent_path = pathlib.Path(__file__).parent.parent
     cmd = [
         os.path.join(parent_path, "Code/autopkg"),
         "run",
@@ -276,6 +278,12 @@ def main():
             report_plist_path,
             "AutoPkgGitMaster.pkg",
             "-vvvv",
+            "-k",
+            "PYTHON_VERSION=3.10.4",
+            "-k",
+            "REQUIREMENTS_FILENAME=new_requirements.txt",
+            "-k",
+            "OS_VERSION=11"
         ]
     )
     subprocess.run(args=cmd, text=True, check=True)
