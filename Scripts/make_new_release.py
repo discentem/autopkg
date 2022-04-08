@@ -45,7 +45,7 @@ class GitHubAPIError(BaseException):
 
 def api_call(
     endpoint,
-    token,
+    token=None,
     baseurl="https://api.github.com",
     data=None,
     json_data=True,
@@ -62,8 +62,9 @@ def api_call(
         data = json.dumps(data, ensure_ascii=False).encode()
     headers = {
         "Accept": "application/vnd.github.v3+json",
-        "Authorization": f"token {token}",
     }
+    if token:
+        headers["Authorization"] = f"token {token}"
     if additional_headers:
         for header, value in list(additional_headers.items()):
             headers[header] = value
@@ -160,16 +161,18 @@ def main():
     opts = parser.parse_args()[0]
     if not opts.next_version:
         sys.exit("Option --next-version is required!")
-    if not opts.token:
+    if not opts.token and not opts.dry_run:
         sys.exit("Option --token is required!")
     next_version = opts.next_version
     if opts.dry_run:
         print("** Running in 'dry-run' mode..")
     publish_user, publish_repo = opts.user_repo.split("/")
-    token = opts.token
-    # ensure our OAuth token works before we go any further
-    print("** Verifying OAuth token")
-    api_call(f"/users/{publish_user}", token)
+    token = None
+    if (not opts.dry_run):
+        token = opts.token
+        # ensure our OAuth token works before we go any further
+        print("** Verifying OAuth token")
+        api_call(f"/users/{publish_user}", token)
 
     # set up some paths and important variables
     autopkg_root = tempfile.mkdtemp()
