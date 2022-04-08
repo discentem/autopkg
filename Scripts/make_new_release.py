@@ -147,11 +147,13 @@ def main():
     parser.add_option(
         "-b",
         "--autopkg-branch",
+        default="master",
         help=("A specific branch of AutoPkg repo clone. Otherwise, clone master."),
     )
     parser.add_option(
         "-r",
         "--recipe-branch",
+        default="master",
         help=(
             "A specific branch of autopkg-recipes repo clone. "
             "Otherwise, clone master."
@@ -184,8 +186,8 @@ def main():
         git_cmd.extend(["--branch", opts.autopkg_branch])
     git_cmd.extend([f"https://github.com/{publish_user}/{publish_repo}", autopkg_root])
     print((" ").join(git_cmd))
-    # clone Git master
-    print("** Clone git master")
+    # Clone the branch of AutoPkg
+    print(f"** Clone git {opts.autopkg_branch}")
     subprocess.check_call(git_cmd)
     os.chdir(autopkg_root)
 
@@ -240,8 +242,8 @@ def main():
     subprocess.check_call(["git", "tag", tag_name])
     if not opts.dry_run:
         print("** Pushing git release")
-        subprocess.check_call(["git", "push", "origin", "master"])
-        subprocess.check_call(["git", "push", "--tags", "origin", "master"])
+        subprocess.check_call(["git", "push", "origin", opts.autopkg_branch])
+        subprocess.check_call(["git", "push", "--tags", "origin", opts.autopkg_branch])
 
     print("** Gathering release notes")
     # extract release notes for this new version
@@ -253,7 +255,7 @@ def main():
 
     recipes_dir = tempfile.mkdtemp()
     git_cmd = ["git", "clone"]
-    if opts.recipe_branch:
+    if opts.recipe_branch != "master":
         git_cmd.extend(["--branch", opts.recipe_branch])
     git_cmd.extend(["https://github.com/autopkg/recipes", recipes_dir])
     print("** Cloning autopkg-recipes")
@@ -271,7 +273,7 @@ def main():
         "-k",
         "force_pkg_build=true",
     ]
-    if opts.autopkg_branch:
+    if opts.autopkg_branch != "master":
         cmd.extend(["-k", f"BRANCH={opts.autopkg_branch}"])
     cmd.extend(
         [
@@ -314,7 +316,7 @@ def main():
     # prepare release metadata
     release_data = dict()
     release_data["tag_name"] = tag_name
-    release_data["target_commitish"] = "master"
+    release_data["target_commitish"] = opts.autopkg_branch
     release_data["name"] = "AutoPkg " + current_version
     release_data["body"] = release_notes
     release_data["draft"] = False
@@ -375,8 +377,8 @@ def main():
         ["git", "commit", "-m", f"Bumping to v{next_version} for development."]
     )
     if not opts.dry_run:
-        print("** Pushing commit to master")
-        subprocess.check_call(["git", "push", "origin", "master"])
+        print(f"** Pushing commit to {opts.autopkg_branch}")
+        subprocess.check_call(["git", "push", "origin", opts.autopkg_branch])
     else:
         print(
             "Ended dry-run mode. Final state of the AutoPkg repo can be "
